@@ -51,8 +51,6 @@ public class GameService : IGameService
     public async Task<Guid> RecordValidationAsync(
         int kidNumber,
         string kidResponse,
-        string expectedResponse,
-        bool wasValid,
         CancellationToken cancellationToken = default)
     {
         var entry = new GameHistoryEntry
@@ -60,8 +58,6 @@ public class GameService : IGameService
             Id = Guid.NewGuid(),
             KidNumber = kidNumber,
             KidResponse = kidResponse,
-            ExpectedResponse = expectedResponse,
-            WasValid = wasValid,
             ValidatedAt = DateTime.UtcNow
         };
 

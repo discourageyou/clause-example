@@ -13,7 +13,5 @@ public interface IGameService
     Task<Guid> RecordValidationAsync(
         int kidNumber,
         string kidResponse,
-        string expectedResponse,
-        bool wasValid,
         CancellationToken cancellationToken = default);
 }

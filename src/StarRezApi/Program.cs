@@ -16,7 +16,7 @@ builder.Services.AddDbContext<GameDbContext>(options =>
 // Services
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IGameHistoryRepository, GameHistoryRepository>();
-builder.Services.AddSingleton<IGameHistoryMapper, GameHistoryMapper>();
+builder.Services.AddScoped<IGameHistoryMapper, GameHistoryMapper>();
 
 // Validators
 builder.Services.AddSingleton<IValidator<ValidateRequest>, ValidateRequestValidator>();

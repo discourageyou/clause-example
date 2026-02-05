@@ -49,8 +49,6 @@ public class GameController : ControllerBase
         await _gameService.RecordValidationAsync(
             request.KidNumber,
             request.KidResponse,
-            expectedResponse,
-            isValid,
             cancellationToken);
 
         return Ok(new ValidateResponse(isValid, expectedResponse, Array.Empty<string>()));

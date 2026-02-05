@@ -29,10 +29,6 @@ public class GameDbContext : DbContext
             entity.Property(e => e.KidResponse)
                 .IsRequired()
                 .HasMaxLength(100);
-
-            entity.Property(e => e.ExpectedResponse)
-                .IsRequired()
-                .HasMaxLength(100);
         });
     }
 }
