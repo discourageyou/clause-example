@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using StarRezApi.Data;
 using StarRezApi.Data.Entities;
 
@@ -7,10 +8,12 @@ namespace StarRezApi.Repositories;
 public class GameHistoryRepository : IGameHistoryRepository
 {
     private readonly GameDbContext _context;
+    private readonly ILogger<GameHistoryRepository> _logger;
 
-    public GameHistoryRepository(GameDbContext context)
+    public GameHistoryRepository(GameDbContext context, ILogger<GameHistoryRepository> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<GameHistoryEntry> AddAsync(GameHistoryEntry entry, CancellationToken cancellationToken = default)
@@ -33,6 +36,9 @@ public class GameHistoryRepository : IGameHistoryRepository
         int offset = 0,
         CancellationToken cancellationToken = default)
     {
+        _logger.LogDebug("Fetching history entries: kidNumber={KidNumber}, limit={Limit}, offset={Offset}",
+            kidNumber, limit, offset);
+
         var query = _context.GameHistory.AsNoTracking();
 
         if (kidNumber.HasValue)

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using StarRezApi.Contracts.V1_0.Responses;
 using StarRezApi.Data.Entities;
 using StarRezApi.Repositories;
@@ -11,10 +12,12 @@ public class GameService : IGameService
     private const string StarRez = "StarRez";
 
     private readonly IGameHistoryRepository _historyRepository;
+    private readonly ILogger<GameService> _logger;
 
-    public GameService(IGameHistoryRepository historyRepository)
+    public GameService(IGameHistoryRepository historyRepository, ILogger<GameService> logger)
     {
         _historyRepository = historyRepository;
+        _logger = logger;
     }
 
     public string GetExpectedResponse(int kidNumber)
@@ -61,7 +64,18 @@ public class GameService : IGameService
             ValidatedAt = DateTime.UtcNow
         };
 
-        await _historyRepository.AddAsync(entry, cancellationToken);
+        try
+        {
+            await _historyRepository.AddAsync(entry, cancellationToken);
+            _logger.LogInformation("Recorded validation for kid {KidNumber}, response: {KidResponse}, id: {EntryId}",
+                kidNumber, kidResponse, entry.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to record validation for kid {KidNumber}, response: {KidResponse}",
+                kidNumber, kidResponse);
+            throw;
+        }
 
         return entry.Id;
     }

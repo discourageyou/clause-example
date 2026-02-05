@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Moq;
 using StarRezApi.Repositories;
 using StarRezApi.Services;
@@ -8,11 +9,13 @@ public class GameServiceTests
 {
     private readonly GameService _sut;
     private readonly Mock<IGameHistoryRepository> _mockRepository;
+    private readonly Mock<ILogger<GameService>> _mockLogger;
 
     public GameServiceTests()
     {
         _mockRepository = new Mock<IGameHistoryRepository>();
-        _sut = new GameService(_mockRepository.Object);
+        _mockLogger = new Mock<ILogger<GameService>>();
+        _sut = new GameService(_mockRepository.Object, _mockLogger.Object);
     }
 
     [Theory]
