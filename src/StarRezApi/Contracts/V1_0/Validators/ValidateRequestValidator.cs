@@ -1,11 +1,12 @@
 using StarRezApi.Contracts.V1_0.Requests;
+using StarRezApi.Exceptions;
 using StarRezApi.Validation;
 
 namespace StarRezApi.Contracts.V1_0.Validators;
 
 public class ValidateRequestValidator : IValidator<ValidateRequest>
 {
-    public ValidationResult Validate(ValidateRequest instance)
+    public void Validate(ValidateRequest instance)
     {
         var errors = new List<string>();
 
@@ -15,8 +16,7 @@ public class ValidateRequestValidator : IValidator<ValidateRequest>
         if (string.IsNullOrWhiteSpace(instance.KidResponse))
             errors.Add("KidResponse is required");
 
-        return errors.Count > 0
-            ? ValidationResult.Failure(errors)
-            : ValidationResult.Success();
+        if (errors.Count > 0)
+            throw new ValidationException(errors);
     }
 }

@@ -1,5 +1,6 @@
 using StarRezApi.Contracts.V1_0.Requests;
 using StarRezApi.Contracts.V1_0.Validators;
+using StarRezApi.Exceptions;
 
 namespace StarRezApi.Tests;
 
@@ -8,71 +9,66 @@ public class CollectionRequestValidatorTests
     private readonly CollectionRequestValidator _sut = new();
 
     [Fact]
-    public void Validate_ValidRequest_ReturnsSuccess()
+    public void Validate_ValidRequest_DoesNotThrow()
     {
         var request = new CollectionRequest { From = 1, To = 100 };
 
-        var result = _sut.Validate(request);
+        var exception = Record.Exception(() => _sut.Validate(request));
 
-        Assert.True(result.IsValid);
-        Assert.Empty(result.Errors);
+        Assert.Null(exception);
     }
 
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
-    public void Validate_InvalidFrom_ReturnsError(int from)
+    public void Validate_InvalidFrom_ThrowsValidationException(int from)
     {
         var request = new CollectionRequest { From = from, To = 100 };
 
-        var result = _sut.Validate(request);
+        var exception = Assert.Throws<ValidationException>(() => _sut.Validate(request));
 
-        Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, e => e.Contains("'from'"));
+        Assert.Contains(exception.Errors, e => e.Contains("'from'"));
     }
 
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
-    public void Validate_InvalidTo_ReturnsError(int to)
+    public void Validate_InvalidTo_ThrowsValidationException(int to)
     {
         var request = new CollectionRequest { From = 1, To = to };
 
-        var result = _sut.Validate(request);
+        var exception = Assert.Throws<ValidationException>(() => _sut.Validate(request));
 
-        Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, e => e.Contains("'to'"));
+        Assert.Contains(exception.Errors, e => e.Contains("'to'"));
     }
 
     [Fact]
-    public void Validate_FromGreaterThanTo_ReturnsError()
+    public void Validate_FromGreaterThanTo_ThrowsValidationException()
     {
         var request = new CollectionRequest { From = 100, To = 1 };
 
-        var result = _sut.Validate(request);
+        var exception = Assert.Throws<ValidationException>(() => _sut.Validate(request));
 
-        Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, e => e.Contains("less than or equal"));
+        Assert.Contains(exception.Errors, e => e.Contains("less than or equal"));
     }
 
     [Fact]
-    public void Validate_RangeExceedsMaximum_ReturnsError()
+    public void Validate_RangeExceedsMaximum_ThrowsValidationException()
     {
         var request = new CollectionRequest { From = 1, To = 20000 };
 
-        var result = _sut.Validate(request);
+        var exception = Assert.Throws<ValidationException>(() => _sut.Validate(request));
 
-        Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, e => e.Contains("Range"));
+        Assert.Contains(exception.Errors, e => e.Contains("Range"));
     }
 
     [Fact]
-    public void Validate_RangeAtMaximum_ReturnsSuccess()
+    public void Validate_RangeAtMaximum_DoesNotThrow()
     {
         var request = new CollectionRequest { From = 1, To = 10001 };
 
-        var result = _sut.Validate(request);
+        var exception = Record.Exception(() => _sut.Validate(request));
 
-        Assert.True(result.IsValid);
+        Assert.Null(exception);
     }
 }

@@ -1,5 +1,6 @@
 using StarRezApi.Contracts.V1_0.Requests;
 using StarRezApi.Contracts.V1_0.Validators;
+using StarRezApi.Exceptions;
 
 namespace StarRezApi.Tests;
 
@@ -8,52 +9,48 @@ public class ValidateRequestValidatorTests
     private readonly ValidateRequestValidator _sut = new();
 
     [Fact]
-    public void Validate_ValidRequest_ReturnsSuccess()
+    public void Validate_ValidRequest_DoesNotThrow()
     {
         var request = new ValidateRequest { KidNumber = 1, KidResponse = "1" };
 
-        var result = _sut.Validate(request);
+        var exception = Record.Exception(() => _sut.Validate(request));
 
-        Assert.True(result.IsValid);
-        Assert.Empty(result.Errors);
+        Assert.Null(exception);
     }
 
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
     [InlineData(-100)]
-    public void Validate_InvalidKidNumber_ReturnsError(int kidNumber)
+    public void Validate_InvalidKidNumber_ThrowsValidationException(int kidNumber)
     {
         var request = new ValidateRequest { KidNumber = kidNumber, KidResponse = "Star" };
 
-        var result = _sut.Validate(request);
+        var exception = Assert.Throws<ValidationException>(() => _sut.Validate(request));
 
-        Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, e => e.Contains("KidNumber"));
+        Assert.Contains(exception.Errors, e => e.Contains("KidNumber"));
     }
 
     [Theory]
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public void Validate_EmptyKidResponse_ReturnsError(string? kidResponse)
+    public void Validate_EmptyKidResponse_ThrowsValidationException(string? kidResponse)
     {
         var request = new ValidateRequest { KidNumber = 1, KidResponse = kidResponse ?? string.Empty };
 
-        var result = _sut.Validate(request);
+        var exception = Assert.Throws<ValidationException>(() => _sut.Validate(request));
 
-        Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, e => e.Contains("KidResponse"));
+        Assert.Contains(exception.Errors, e => e.Contains("KidResponse"));
     }
 
     [Fact]
-    public void Validate_MultipleErrors_ReturnsAllErrors()
+    public void Validate_MultipleErrors_ThrowsWithAllErrors()
     {
         var request = new ValidateRequest { KidNumber = 0, KidResponse = "" };
 
-        var result = _sut.Validate(request);
+        var exception = Assert.Throws<ValidationException>(() => _sut.Validate(request));
 
-        Assert.False(result.IsValid);
-        Assert.Equal(2, result.Errors.Count);
+        Assert.Equal(2, exception.Errors.Count);
     }
 }

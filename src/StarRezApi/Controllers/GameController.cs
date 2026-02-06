@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using StarRezApi.Contracts.V1_0.Requests;
 using StarRezApi.Contracts.V1_0.Responses;
+using StarRezApi.Exceptions;
 using StarRezApi.Mappers;
 using StarRezApi.Repositories;
 using StarRezApi.Services;
@@ -39,9 +40,7 @@ public class GameController : ControllerBase
         [FromBody] ValidateRequest request,
         CancellationToken cancellationToken)
     {
-        var validation = _validateRequestValidator.Validate(request);
-        if (!validation.IsValid)
-            return BadRequest(new ValidateResponse(false, string.Empty, validation.Errors));
+        _validateRequestValidator.Validate(request);
 
         var expectedResponse = _gameService.GetExpectedResponse(request.KidNumber);
         var isValid = _gameService.ValidateResponse(request.KidNumber, request.KidResponse);
@@ -51,19 +50,17 @@ public class GameController : ControllerBase
             request.KidResponse,
             cancellationToken);
 
-        return Ok(new ValidateResponse(isValid, expectedResponse, Array.Empty<string>()));
+        return Ok(new ValidateResponse(isValid, expectedResponse));
     }
 
     [HttpGet("all")]
     public ActionResult<CollectionResponse> GetAll([FromQuery] CollectionRequest request)
     {
-        var validation = _collectionRequestValidator.Validate(request);
-        if (!validation.IsValid)
-            return BadRequest(new CollectionResponse(Array.Empty<KidResultDto>(), validation.Errors));
+        _collectionRequestValidator.Validate(request);
 
         var data = _gameService.GetSequence(request.From, request.To).ToList();
 
-        return Ok(new CollectionResponse(data, Array.Empty<string>()));
+        return Ok(new CollectionResponse(data));
     }
 
     [HttpGet("history")]
@@ -71,12 +68,7 @@ public class GameController : ControllerBase
         [FromQuery] HistoryRequest request,
         CancellationToken cancellationToken)
     {
-        var validation = _historyRequestValidator.Validate(request);
-        if (!validation.IsValid)
-            return BadRequest(new HistoryResponse(
-                Array.Empty<HistoryEntryResponse>(),
-                0,
-                validation.Errors));
+        _historyRequestValidator.Validate(request);
 
         var entries = await _historyRepository.GetAllAsync(
             request.KidNumber,
@@ -90,7 +82,7 @@ public class GameController : ControllerBase
 
         var data = _historyMapper.ToResponseList(entries);
 
-        return Ok(new HistoryResponse(data, totalCount, Array.Empty<string>()));
+        return Ok(new HistoryResponse(data, totalCount));
     }
 
     [HttpGet("history/{id:guid}")]
@@ -101,7 +93,7 @@ public class GameController : ControllerBase
         var entry = await _historyRepository.GetByIdAsync(id, cancellationToken);
 
         if (entry is null)
-            return NotFound();
+            throw new NotFoundException("HistoryEntry", id);
 
         return Ok(_historyMapper.ToResponse(entry));
     }

@@ -1,4 +1,5 @@
 using StarRezApi.Contracts.V1_0.Requests;
+using StarRezApi.Exceptions;
 using StarRezApi.Validation;
 
 namespace StarRezApi.Contracts.V1_0.Validators;
@@ -7,7 +8,7 @@ public class HistoryRequestValidator : IValidator<HistoryRequest>
 {
     private const int MaxLimit = 1000;
 
-    public ValidationResult Validate(HistoryRequest instance)
+    public void Validate(HistoryRequest instance)
     {
         var errors = new List<string>();
 
@@ -23,8 +24,7 @@ public class HistoryRequestValidator : IValidator<HistoryRequest>
         if (instance.Offset < 0)
             errors.Add("Offset cannot be negative");
 
-        return errors.Count > 0
-            ? ValidationResult.Failure(errors)
-            : ValidationResult.Success();
+        if (errors.Count > 0)
+            throw new ValidationException(errors);
     }
 }

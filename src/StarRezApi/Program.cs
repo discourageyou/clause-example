@@ -3,6 +3,7 @@ using StarRezApi.Contracts.V1_0.Requests;
 using StarRezApi.Contracts.V1_0.Validators;
 using StarRezApi.Data;
 using StarRezApi.Mappers;
+using StarRezApi.Middleware;
 using StarRezApi.Repositories;
 using StarRezApi.Services;
 using StarRezApi.Validation;
@@ -28,6 +29,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+// Exception handling middleware (must be first)
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

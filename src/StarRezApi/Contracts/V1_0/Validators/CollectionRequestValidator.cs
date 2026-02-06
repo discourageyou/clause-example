@@ -1,4 +1,5 @@
 using StarRezApi.Contracts.V1_0.Requests;
+using StarRezApi.Exceptions;
 using StarRezApi.Validation;
 
 namespace StarRezApi.Contracts.V1_0.Validators;
@@ -7,7 +8,7 @@ public class CollectionRequestValidator : IValidator<CollectionRequest>
 {
     private const int MaxRange = 10000;
 
-    public ValidationResult Validate(CollectionRequest instance)
+    public void Validate(CollectionRequest instance)
     {
         var errors = new List<string>();
 
@@ -23,8 +24,7 @@ public class CollectionRequestValidator : IValidator<CollectionRequest>
         if (instance.To - instance.From > MaxRange)
             errors.Add($"Range cannot exceed {MaxRange} items");
 
-        return errors.Count > 0
-            ? ValidationResult.Failure(errors)
-            : ValidationResult.Success();
+        if (errors.Count > 0)
+            throw new ValidationException(errors);
     }
 }
