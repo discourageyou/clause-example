@@ -1,0 +1,82 @@
+using Microsoft.Extensions.Logging;
+using StarRezApi.Contracts.V1_0.Responses;
+using StarRezApi.Data.Entities;
+using StarRezApi.Repositories;
+
+namespace StarRezApi.Services;
+
+public class GameService : IGameService
+{
+    private const string Star = "Star";
+    private const string Rez = "Rez";
+    private const string StarRez = "StarRez";
+
+    private readonly IGameHistoryRepository _historyRepository;
+    private readonly ILogger<GameService> _logger;
+
+    public GameService(IGameHistoryRepository historyRepository, ILogger<GameService> logger)
+    {
+        _historyRepository = historyRepository;
+        _logger = logger;
+    }
+
+    public string GetExpectedResponse(int kidNumber)
+    {
+        bool divisibleBy3 = kidNumber % 3 == 0;
+        bool divisibleBy5 = kidNumber % 5 == 0;
+
+        if (divisibleBy3 && divisibleBy5)
+            return StarRez;
+
+        if (divisibleBy3)
+            return Star;
+
+        if (divisibleBy5)
+            return Rez;
+
+        return kidNumber.ToString();
+    }
+
+    public bool ValidateResponse(int kidNumber, string kidResponse)
+    {
+        var expected = GetExpectedResponse(kidNumber);
+        return string.Equals(expected, kidResponse, StringComparison.Ordinal);
+    }
+
+    public IEnumerable<KidResultDto> GetSequence(int from, int to)
+    {
+        for (int i = from; i <= to; i++)
+        {
+            yield return new KidResultDto(i, GetExpectedResponse(i));
+        }
+    }
+
+    public async Task<Guid> RecordValidationAsync(
+        int kidNumber,
+        string kidResponse,
+        CancellationToken cancellationToken = default)
+    {
+        var entry = new GameHistoryEntry
+        {
+            Id = Guid.NewGuid(),
+            KidNumber = kidNumber,
+            KidResponse = kidResponse,
+            ValidatedAt = DateTime.UtcNow
+        };
+
+        try
+        {
+            await _historyRepository.AddAsync(entry, cancellationToken);
+            _logger.LogInformation("Recorded validation for kid {KidNumber}, response: {KidResponse}, id: {EntryId}",
+                kidNumber, kidResponse, entry.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to record validation for kid {KidNumber}, response: {KidResponse}",
+                kidNumber, kidResponse);
+            throw;
+        }
+
+        return entry.Id;
+    }
+}
